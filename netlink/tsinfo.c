@@ -1,7 +1,8 @@
 /*
  * tsinfo.c - netlink implementation of timestamping commands
  *
- * Implementation of "ethtool -T <dev>"
+ * Implementation of "ethtool -T <dev>", "ethtool --list-ts <dev>" and
+ * "ethtool --set-ts <dev> phy|mac"
  */
 
 #include <errno.h>

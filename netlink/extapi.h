@@ -36,6 +36,9 @@ int nl_spause(struct cmd_context *ctx);
 int nl_geee(struct cmd_context *ctx);
 int nl_seee(struct cmd_context *ctx);
 int nl_tsinfo(struct cmd_context *ctx);
+int nl_get_ts(struct cmd_context *ctx);
+int nl_list_ts(struct cmd_context *ctx);
+int nl_set_ts(struct cmd_context *ctx);
 int nl_cable_test(struct cmd_context *ctx);
 int nl_cable_test_tdr(struct cmd_context *ctx);
 int nl_gtunnels(struct cmd_context *ctx);
@@ -110,6 +113,9 @@ nl_get_eeprom_page(struct cmd_context *ctx __maybe_unused,
 #define nl_geee			NULL
 #define nl_seee			NULL
 #define nl_tsinfo		NULL
+#define nl_get_ts		NULL
+#define nl_list_ts		NULL
+#define nl_set_ts		NULL
 #define nl_cable_test		NULL
 #define nl_cable_test_tdr	NULL
 #define nl_gtunnels		NULL

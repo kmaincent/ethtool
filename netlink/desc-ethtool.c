@@ -238,6 +238,12 @@ static const struct pretty_nla_desc __tsinfo_desc[] = {
 	NLATTR_DESC_U32(ETHTOOL_A_TSINFO_PHC_INDEX),
 };
 
+static const struct pretty_nla_desc __ts_desc[] = {
+	NLATTR_DESC_INVALID(ETHTOOL_A_TSINFO_UNSPEC),
+	NLATTR_DESC_NESTED(ETHTOOL_A_TS_HEADER, header),
+	NLATTR_DESC_U32(ETHTOOL_A_TS_LAYER),
+};
+
 static const struct pretty_nla_desc __cable_test_desc[] = {
 	NLATTR_DESC_INVALID(ETHTOOL_A_CABLE_TEST_UNSPEC),
 	NLATTR_DESC_NESTED(ETHTOOL_A_CABLE_TEST_HEADER, header),

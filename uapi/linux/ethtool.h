@@ -1668,6 +1668,9 @@ enum ethtool_fec_config_bits {
 #define ETHTOOL_PHY_STUNABLE	0x0000004f /* Set PHY tunable configuration */
 #define ETHTOOL_GFECPARAM	0x00000050 /* Get FEC settings */
 #define ETHTOOL_SFECPARAM	0x00000051 /* Set FEC settings */
+#define ETHTOOL_LIST_PTP	0x00000052 /* List PTP providers */
+#define ETHTOOL_GET_PTP		0x00000053 /* Get current PTP provider */
+#define ETHTOOL_SET_PTP		0x00000054 /* Set PTP provider */
 
 /* compatibility with older code */
 #define SPARC_ETH_GSET		ETHTOOL_GSET
