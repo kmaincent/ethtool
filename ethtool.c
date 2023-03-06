@@ -4814,6 +4814,80 @@ static int do_tsinfo(struct cmd_context *ctx)
 	return 0;
 }
 
+static int do_list_ptp(struct cmd_context *ctx)
+{
+	struct ethtool_value edata;
+
+	if (ctx->argc != 0)
+		exit_bad_args();
+
+	fprintf(stdout, "Available PTP providers for %s:\n", ctx->devname);
+	edata.cmd = ETHTOOL_LIST_PTP;
+	if (send_ioctl(ctx, &edata)) {
+		perror("Cannot get device PTP provider(s)");
+		return 1;
+	}
+
+	if(edata.data & MAC_TIMESTAMPING)
+		fprintf(stdout, "mac\n");
+	if(edata.data & PHY_TIMESTAMPING)
+		fprintf(stdout, "phy\n");
+
+	return 0;
+}
+
+static int do_get_ptp(struct cmd_context *ctx)
+{
+	struct ethtool_value edata;
+
+	if (ctx->argc != 0)
+		exit_bad_args();
+
+	fprintf(stdout, "PTP provider for %s:\n", ctx->devname);
+	edata.cmd = ETHTOOL_GET_PTP;
+	if (send_ioctl(ctx, &edata)) {
+		perror("Cannot get device PTP provder");
+		return 1;
+	}
+
+	switch (edata.data) {
+	case MAC_TIMESTAMPING:
+		fprintf(stdout, "mac\n");
+		break;
+	case PHY_TIMESTAMPING:
+		fprintf(stdout, "phy\n");
+		break;
+	}
+
+	return 0;
+}
+
+static int do_set_ptp(struct cmd_context *ctx)
+{
+	struct ethtool_value edata;
+	char **argp = ctx->argp;
+
+	if (ctx->argc != 1)
+		exit_bad_args();
+
+	if (!strcmp(argp[0], "phy"))
+		edata.data = PHY_TIMESTAMPING;
+	else if (!strcmp(argp[0], "mac"))
+		edata.data = MAC_TIMESTAMPING;
+	else {
+		perror("No such PTP device\n");
+		return 1;
+	}
+
+	edata.cmd = ETHTOOL_SET_PTP;
+	if (send_ioctl(ctx, &edata)) {
+		perror("Cannot set device PTP provider");
+		return 1;
+	}
+
+	return 0;
+}
+
 static int do_getmodule(struct cmd_context *ctx)
 {
 	struct ethtool_modinfo modinfo;
@@ -5868,6 +5942,22 @@ static const struct option args[] = {
 		.func	= do_tsinfo,
 		.nlfunc	= nl_tsinfo,
 		.help	= "Show time stamping capabilities"
+	},
+	{
+		.opts	= "--list-ptp",
+		.func	= do_list_ptp,
+		.help	= "List available PTP providers"
+	},
+	{
+		.opts	= "--get-ptp",
+		.func	= do_get_ptp,
+		.help	= "Get current PTP provider"
+	},
+	{
+		.opts	= "--set-ptp",
+		.func	= do_set_ptp,
+		.help	= "Set PTP provider",
+		.xhelp	= "		[ phy|mac ]\n"
 	},
 	{
 		.opts	= "-x|--show-rxfh-indir|--show-rxfh",
