@@ -6,8 +6,8 @@
  * doucumentation of the interface.
  */
 
-#ifndef _LINUX_ETHTOOL_NETLINK_H_
-#define _LINUX_ETHTOOL_NETLINK_H_
+#ifndef _UAPI_LINUX_ETHTOOL_NETLINK_H_
+#define _UAPI_LINUX_ETHTOOL_NETLINK_H_
 
 #include <linux/ethtool.h>
 
@@ -895,6 +895,13 @@ enum {
 	ETHTOOL_A_PODL_PSE_ADMIN_STATE,		/* u32 */
 	ETHTOOL_A_PODL_PSE_ADMIN_CONTROL,	/* u32 */
 	ETHTOOL_A_PODL_PSE_PW_D_STATUS,		/* u32 */
+	ETHTOOL_A_C33_PSE_ADMIN_STATE,		/* u32 */
+	ETHTOOL_A_C33_PSE_ADMIN_CONTROL,	/* u32 */
+	ETHTOOL_A_C33_PSE_PW_D_STATUS,		/* u32 */
+	ETHTOOL_A_C33_PSE_PW_STATUS_MSG,	/* binary */
+	ETHTOOL_A_C33_PSE_PW_CLASS,		/* u32 */
+	ETHTOOL_A_C33_PSE_PW_LIMIT,		/* u32 */
+	ETHTOOL_A_C33_PSE_ACTUAL_PW,		/* u32 */
 
 	/* add new constants above here */
 	__ETHTOOL_A_PSE_CNT,
@@ -982,4 +989,4 @@ enum {
 
 #define ETHTOOL_MCGRP_MONITOR_NAME "monitor"
 
-#endif /* _LINUX_ETHTOOL_NETLINK_H_ */
+#endif /* _UAPI_LINUX_ETHTOOL_NETLINK_H_ */
