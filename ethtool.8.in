@@ -546,6 +546,7 @@ ethtool \- query or control network driver and hardware settings
 .RB [ c33\-pse\-admin\-control
 .BR enable | disable ]
 .BN c33\-pse\-avail\-pw\-limit N
+.BN prio N
 .HP
 .B ethtool \-\-flash\-module\-firmware
 .I devname
@@ -1850,6 +1851,17 @@ This attribute specifies the allowed power limit ranges in mW for
 configuring the c33-pse-avail-pw-limit parameter. It defines the valid
 power levels that can be assigned to the c33 PSE in compliance with the
 c33 standard.
+.TP
+.B budget-evaluation-strategy
+This attribute defines the budget evaluation strategy for the PSE,
+outlining the port's behavior when the power budget is exceeded, based on
+the port's assigned priority.
+.TP
+.B priority-max
+This attribute defines the maximum priority available for the PSE.
+.TP
+.B priority
+This attribute defines the currently configured priority for the PSE.
 
 .RE
 .TP
@@ -1869,6 +1881,9 @@ This parameter manages c33 PSE Admin operations in accordance with the IEEE
 This parameter manages c33 PSE Available Power Limit in mW, in accordance
 with the IEEE 802.3-2022 33.2.4.4 Variables (pse_available_power)
 specification.
+.TP
+.B prio \ N
+This parameter manages port priority.
 
 .RE
 .TP
