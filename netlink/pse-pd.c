@@ -13,6 +13,7 @@
 
 #include "../internal.h"
 #include "../common.h"
+#include "bitset.h"
 #include "netlink.h"
 #include "parser.h"
 
@@ -267,6 +268,20 @@ static void c33_pse_print_ext_substate(u32 state, u32 substate)
 	}
 }
 
+static const char *pse_budget_eval_strat_name(u32 val)
+{
+	switch (val) {
+	case ETHTOOL_PSE_BUDGET_EVAL_STRAT_DISABLED:
+		return "Disabled";
+	case ETHTOOL_PSE_BUDGET_EVAL_STRAT_STATIC:
+		return "Static";
+	case ETHTOOL_PSE_BUDGET_EVAL_STRAT_DYNAMIC:
+		return "Dynamic";
+	default:
+		return "unsupported";
+	}
+}
+
 static int c33_pse_dump_pw_limit_range(const struct nlattr *range)
 {
 	const struct nlattr *range_tb[ETHTOOL_A_C33_PSE_PW_LIMIT_MAX + 1] = {};
@@ -420,6 +435,38 @@ int pse_reply_cb(const struct nlmsghdr *nlhdr, void *data)
 		}
 	}
 
+	if (tb[ETHTOOL_A_PSE_PW_D_ID]) {
+		u32 val;
+
+		val = mnl_attr_get_u32(tb[ETHTOOL_A_PSE_PW_D_ID]);
+		print_uint(PRINT_ANY, "power-domain-index",
+			   "Power domain index: %u\n", val);
+	}
+
+	if (tb[ETHTOOL_A_PSE_BUDGET_EVAL_STRAT]) {
+		u32 val;
+
+		val = mnl_attr_get_u32(tb[ETHTOOL_A_PSE_BUDGET_EVAL_STRAT]);
+		print_string(PRINT_ANY, "budget-evaluation-strategy",
+			     "Budget evaluation strategy: %s\n",
+			     pse_budget_eval_strat_name(val));
+	}
+
+	if (tb[ETHTOOL_A_PSE_PRIO_MAX]) {
+		u32 val;
+
+		val = mnl_attr_get_u32(tb[ETHTOOL_A_PSE_PRIO_MAX]);
+		print_uint(PRINT_ANY, "priority-max",
+			   "Max allowed priority: %u\n", val);
+	}
+
+	if (tb[ETHTOOL_A_PSE_PRIO]) {
+		u32 val;
+
+		val = mnl_attr_get_u32(tb[ETHTOOL_A_PSE_PRIO]);
+		print_uint(PRINT_ANY, "priority", "Priority %u\n", val);
+	}
+
 	close_json_object();
 
 	return MNL_CB_OK;
@@ -450,6 +497,48 @@ int nl_gpse(struct cmd_context *ctx)
 	delete_json_obj();
 
 	return ret;
+}
+
+static void pse_ntf_events_walk(unsigned int idx  __maybe_unused,
+				const char *name,
+				bool val, void *data __maybe_unused)
+{
+	if (!val)
+		return;
+
+	print_string(PRINT_ANY, NULL, " %s", name);
+}
+
+int pse_ntf_cb(const struct nlmsghdr *nlhdr, void *data)
+{
+	const struct nlattr *tb[ETHTOOL_A_PSE_MAX + 1] = {};
+	struct nl_context *nlctx = data;
+	DECLARE_ATTR_TB_INFO(tb);
+	int ret;
+
+	ret = mnl_attr_parse(nlhdr, GENL_HDRLEN, attr_cb, &tb_info);
+	if (ret < 0)
+		return MNL_CB_OK;
+
+	if (!tb[ETHTOOL_A_PSE_NTF_EVENTS])
+		return MNL_CB_OK;
+
+	nlctx->devname = get_dev_name(tb[ETHTOOL_A_PSE_HEADER]);
+	if (!dev_ok(nlctx))
+		return MNL_CB_OK;
+
+	open_json_object(NULL);
+	print_string(PRINT_ANY, "ifname", "PSE event for %s:\n",
+		     nlctx->devname);
+	open_json_array("events", "Events:");
+	ret = walk_bitset(tb[ETHTOOL_A_PSE_NTF_EVENTS], NULL,
+			  pse_ntf_events_walk, NULL);
+	close_json_array("\n");
+	if (ret < 0)
+		return MNL_CB_OK;
+
+	close_json_object();
+	return MNL_CB_OK;
 }
 
 /* PSE_SET */
@@ -484,6 +573,12 @@ static const struct param_parser spse_params[] = {
 	{
 		.arg		= "c33-pse-avail-pw-limit",
 		.type		= ETHTOOL_A_C33_PSE_AVAIL_PW_LIMIT,
+		.handler	= nl_parse_direct_u32,
+		.min_argc	= 1,
+	},
+	{
+		.arg		= "prio",
+		.type		= ETHTOOL_A_PSE_PRIO,
 		.handler	= nl_parse_direct_u32,
 		.min_argc	= 1,
 	},
