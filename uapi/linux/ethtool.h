@@ -679,6 +679,8 @@ enum ethtool_link_ext_substate_module {
  * @ETH_SS_STATS_ETH_MAC: names of IEEE 802.3 MAC statistics
  * @ETH_SS_STATS_ETH_CTRL: names of IEEE 802.3 MAC Control statistics
  * @ETH_SS_STATS_RMON: names of RMON statistics
+ * @ETH_SS_STATS_PHY: names of PHY(dev) statistics
+ * @ETH_SS_PSE_EVENTS: names of PSE events
  *
  * @ETH_SS_COUNT: number of defined string sets
  */
@@ -704,6 +706,8 @@ enum ethtool_stringset {
 	ETH_SS_STATS_ETH_MAC,
 	ETH_SS_STATS_ETH_CTRL,
 	ETH_SS_STATS_RMON,
+	ETH_SS_STATS_PHY,
+	ETH_SS_PSE_EVENTS,
 
 	/* add new constants above here */
 	ETH_SS_COUNT
@@ -994,6 +998,58 @@ enum ethtool_c33_pse_pw_d_status {
 	ETHTOOL_C33_PSE_PW_D_STATUS_TEST,
 	ETHTOOL_C33_PSE_PW_D_STATUS_FAULT,
 	ETHTOOL_C33_PSE_PW_D_STATUS_OTHERFAULT,
+};
+
+/**
+ * enum ethtool_pse_events - event list of the PSE controller.
+ * @ETHTOOL_PSE_EVENT_OVER_CURRENT: PSE output current is too high.
+ * @ETHTOOL_PSE_EVENT_OVER_TEMP: PSE in over temperature state.
+ * @ETHTOOL_C33_PSE_EVENT_DETECTION: detection process occur on the PSE.
+ *	IEEE 802.3-2022 33.2.5 and 145.2.6 PSE detection of PDs.
+ *	IEEE 802.3-202 30.9.1.1.5 aPSEPowerDetectionStatus.
+ * @ETHTOOL_C33_PSE_EVENT_CLASSIFICATION: classification process occur on
+ *	the PSE. IEEE 802.3-2022 33.2.6 and 145.2.8 classification of PDs and
+ *	mutual identification.
+ *	IEEE 802.3-2022 30.9.1.1.8 aPSEPowerClassification.
+ * @ETHTOOL_C33_PSE_EVENT_DISCONNECTION: PD has been disconnected on the PSE.
+ *	IEEE 802.3-2022 33.3.8 and 145.3.9 PD Maintain Power Signature.
+ *	IEEE 802.3-2022 33.5.1.2.9 MPS Absent.
+ *	IEEE 802.3-2022 30.9.1.1.20 aPSEMPSAbsentCounter.
+ * @ETHTOOL_PSE_EVENT_OVER_BUDGET: PSE turned off due to over budget situation.
+ * @ETHTOOL_PSE_EVENT_SW_PW_CONTROL_ERROR: PSE faced an error managing the
+ *	power control from software.
+ *
+ * @ETHTOOL_PSE_EVENT_LAST: Last PSE event of the enum.
+ */
+
+enum ethtool_pse_events {
+	ETHTOOL_PSE_EVENT_OVER_CURRENT =	1 << 0,
+	ETHTOOL_PSE_EVENT_OVER_TEMP =		1 << 1,
+	ETHTOOL_C33_PSE_EVENT_DETECTION =	1 << 2,
+	ETHTOOL_C33_PSE_EVENT_CLASSIFICATION =	1 << 3,
+	ETHTOOL_C33_PSE_EVENT_DISCONNECTION =	1 << 4,
+	ETHTOOL_PSE_EVENT_OVER_BUDGET =		1 << 5,
+	ETHTOOL_PSE_EVENT_SW_PW_CONTROL_ERROR =	1 << 6,
+
+	ETHTOOL_PSE_EVENT_LAST = ETHTOOL_PSE_EVENT_SW_PW_CONTROL_ERROR,
+};
+
+/**
+ * enum ethtool_pse_budget_eval_strategies - PSE budget evaluation strategies.
+ * @ETHTOOL_PSE_BUDGET_EVAL_STRAT_DISABLED: Budget evaluation strategy disabled.
+ * @ETHTOOL_PSE_BUDGET_EVAL_STRAT_STATIC: PSE static budget evaluation strategy.
+ *	Budget evaluation strategy based on the power requested during PD
+ *	classification. This strategy is managed by the PSE core.
+ * @ETHTOOL_PSE_BUDGET_EVAL_STRAT_DYNAMIC: PSE dynamic budget evaluation
+ *	strategy. Budget evaluation strategy based on the current consumption
+ *	per ports compared to the total	power budget. This mode is managed by
+ *	the PSE controller.
+ */
+
+enum ethtool_pse_budget_eval_strategies {
+	ETHTOOL_PSE_BUDGET_EVAL_STRAT_DISABLED	= 1 << 0,
+	ETHTOOL_PSE_BUDGET_EVAL_STRAT_STATIC	= 1 << 1,
+	ETHTOOL_PSE_BUDGET_EVAL_STRAT_DYNAMIC	= 1 << 2,
 };
 
 /**
@@ -2524,6 +2580,11 @@ struct ethtool_link_settings {
 	__u8	master_slave_state;
 	__u8	rate_matching;
 	__u32	reserved[7];
+	/* Linux builds with -Wflex-array-member-not-at-end but does
+	 * not use the "link_mode_masks" member. Leave it defined for
+	 * userspace for now, and when userspace wants to start using
+	 * -Wfamnae, we'll need a new solution.
+	 */
 	__u32	link_mode_masks[];
 	/* layout of link_mode_masks fields:
 	 * __u32 map_supported[link_mode_masks_nwords];
