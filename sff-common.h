@@ -26,6 +26,9 @@
 #include <stdio.h>
 #include "internal.h"
 
+#define SFF_MAX_DESC_LEN   120
+#define SFF_MAX_FIELD_LEN  64
+
 /* Revision compliance */
 #define  SFF8636_REV_UNSPECIFIED		0x00
 #define  SFF8636_REV_8436_48			0x01
@@ -71,18 +74,52 @@
 		      (double)((var) / 10000.),                           \
 		       convert_mw_to_dbm((double)((var) / 10000.)))
 
+#define PRINT_xX_PWR_JSON(string, var)				\
+		print_float(PRINT_JSON, string, "%.2f",		\
+			    (double)((var) / 10000.))
+
+#define PRINT_xX_PWR_ALL(string, json_string, var)		\
+		is_json_context() ?				\
+		PRINT_xX_PWR_JSON(json_string, var) :		\
+		PRINT_xX_PWR(string, var)
+
 #define PRINT_BIAS(string, bias_cur)                             \
 		printf("\t%-41s : %.3f mA\n", (string),                       \
 		      (double)(bias_cur / 500.))
+
+#define PRINT_BIAS_JSON(string, bias_cur)			\
+		print_float(PRINT_JSON, string, "%.3f",		\
+			    (double)(bias_cur / 500.))
+
+#define PRINT_BIAS_ALL(string, json_string, bias_cur)		\
+		is_json_context() ?				\
+		PRINT_BIAS_JSON(json_string, bias_cur) :	\
+		PRINT_BIAS(string, bias_cur)
 
 #define PRINT_TEMP(string, temp)                                   \
 		printf("\t%-41s : %.2f degrees C / %.2f degrees F\n", \
 		      (string), (double)(temp / 256.),                \
 		      (double)(temp / 256. * 1.8 + 32.))
 
+#define PRINT_TEMP_JSON(string, temp)				\
+		print_float(PRINT_JSON, string, "%.2f", (double)(temp / 256.))
+
+#define PRINT_TEMP_ALL(string, json_string, temp)		\
+		is_json_context() ?				\
+		PRINT_TEMP_JSON(json_string, temp) : PRINT_TEMP(string, temp)
+
 #define PRINT_VCC(string, sfp_voltage)          \
 		printf("\t%-41s : %.4f V\n", (string),       \
 		      (double)(sfp_voltage / 10000.))
+
+#define PRINT_VCC_JSON(string, sfp_voltage)			\
+		print_float(PRINT_JSON, string, "%.4f",		\
+			    (double)(sfp_voltage / 10000.))
+
+#define PRINT_VCC_ALL(string, json_string, sfp_voltage)		\
+		is_json_context() ? 				\
+		PRINT_VCC_JSON(json_string, sfp_voltage) :	\
+		PRINT_VCC(string, sfp_voltage)
 
 # define PRINT_xX_THRESH_PWR(string, var, index)                       \
 		PRINT_xX_PWR(string, (var)[(index)])
@@ -129,7 +166,11 @@ struct sff_diags {
 };
 
 double convert_mw_to_dbm(double mw);
+void sff_print_any_hex_field(const char *field_name,
+			     const char *json_field_name, u8 value,
+			     const char *desc);
 void sff_show_thresholds(struct sff_diags sd);
+void sff_show_thresholds_json(struct sff_diags sd);
 
 void sff8024_show_encoding(const __u8 *id, int encoding_offset, int sff_type);
 

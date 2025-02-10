@@ -264,6 +264,12 @@ struct module_aw_chan {
 extern const struct module_aw_mod module_aw_mod_flags[];
 extern const struct module_aw_chan module_aw_chan_flags[];
 
+void convert_json_field_name(const char *str, char *json_str);
+void module_print_any_uint(const char *fn, int value, const char *unit);
+void module_print_any_string(const char *fn, const char *value);
+void module_print_any_float(const char *fn, float value, const char *unit);
+void module_print_any_bool(const char *fn, char *given_json_fn, bool value,
+			   const char *str_value);
 void module_show_value_with_unit(const __u8 *id, unsigned int reg,
 				 const char *name, unsigned int mult,
 				 const char *unit);
