@@ -736,13 +736,13 @@ static void sff8636_show_page_zero(const struct sff8636_memory_map *map)
 				    "BR, Nominal", 100, "Mbps");
 	sff8636_show_rate_identifier(map);
 	module_show_value_with_unit(map->page_00h, SFF8636_SM_LEN_OFFSET,
-				    "Length (SMF,km)", 1, "km");
+				    "Length (SMF)", 1, "km");
 	module_show_value_with_unit(map->page_00h, SFF8636_OM3_LEN_OFFSET,
-				    "Length (OM3 50um)", 2, "m");
+				    "Length (OM3)", 2, "m");
 	module_show_value_with_unit(map->page_00h, SFF8636_OM2_LEN_OFFSET,
-				    "Length (OM2 50um)", 1, "m");
+				    "Length (OM2)", 1, "m");
 	module_show_value_with_unit(map->page_00h, SFF8636_OM1_LEN_OFFSET,
-				    "Length (OM1 62.5um)", 1, "m");
+				    "Length (OM1)", 1, "m");
 	module_show_value_with_unit(map->page_00h, SFF8636_CBL_LEN_OFFSET,
 				    "Length (Copper or Active cable)", 1, "m");
 	sff8636_show_wavelength_or_copper_compliance(map);

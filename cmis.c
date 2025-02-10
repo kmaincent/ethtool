@@ -282,9 +282,9 @@ static void cmis_show_link_len(const struct cmis_memory_map *map)
 	module_show_value_with_unit(map->page_01h, CMIS_OM4_LEN_OFFSET,
 				    "Length (OM4)", 2, "m");
 	module_show_value_with_unit(map->page_01h, CMIS_OM3_LEN_OFFSET,
-				    "Length (OM3 50/125um)", 2, "m");
+				    "Length (OM3)", 2, "m");
 	module_show_value_with_unit(map->page_01h, CMIS_OM2_LEN_OFFSET,
-				    "Length (OM2 50/125um)", 1, "m");
+				    "Length (OM2)", 1, "m");
 }
 
 /**

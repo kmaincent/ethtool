@@ -395,11 +395,12 @@ static void sff8079_show_all_common(const __u8 *id)
 		sff8079_show_encoding(id);
 		printf("\t%-41s : %u%s\n", "BR, Nominal", br_nom, "MBd");
 		sff8079_show_rate_identifier(id);
-		module_show_value_with_unit(id, 14, "Length (SMF,km)", 1, "km");
-		module_show_value_with_unit(id, 15, "Length (SMF)", 100, "m");
-		module_show_value_with_unit(id, 16, "Length (50um)", 10, "m");
-		module_show_value_with_unit(id, 17, "Length (62.5um)", 10, "m");
-		module_show_value_with_unit(id, 18, "Length (Copper)", 1, "m");
+		module_show_value_with_unit(id, 14, "Length (SMF)", 1, "km");
+		module_show_value_with_unit(id, 16, "Length (OM2)", 10, "m");
+		module_show_value_with_unit(id, 17, "Length (OM1)", 10, "m");
+		module_show_value_with_unit(id, 18,
+					    "Length (Copper or Active cable)",
+					    1, "m");
 		module_show_value_with_unit(id, 19, "Length (OM3)", 10, "m");
 		sff8079_show_wavelength_or_copper_compliance(id);
 		module_show_ascii(id, 20, 35, "Vendor name");
