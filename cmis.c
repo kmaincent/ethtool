@@ -11,7 +11,7 @@
 #include <math.h>
 #include <errno.h>
 #include "internal.h"
-#include "sff-common.h"
+#include "module-common.h"
 #include "cmis.h"
 #include "netlink/extapi.h"
 
@@ -36,93 +36,19 @@ struct cmis_memory_map {
 #define CMIS_PAGE_SIZE		0x80
 #define CMIS_I2C_ADDRESS	0x50
 
-static struct {
-	const char *str;
-	int offset;
-	__u8 value;	/* Alarm is on if (offset & value) != 0. */
-} cmis_aw_mod_flags[] = {
-	{ "Module temperature high alarm",
-	  CMIS_TEMP_AW_OFFSET, CMIS_TEMP_HALARM_STATUS },
-	{ "Module temperature low alarm",
-	  CMIS_TEMP_AW_OFFSET, CMIS_TEMP_LALARM_STATUS },
-	{ "Module temperature high warning",
-	  CMIS_TEMP_AW_OFFSET, CMIS_TEMP_HWARN_STATUS },
-	{ "Module temperature low warning",
-	  CMIS_TEMP_AW_OFFSET, CMIS_TEMP_LWARN_STATUS },
-
-	{ "Module voltage high alarm",
-	  CMIS_VCC_AW_OFFSET, CMIS_VCC_HALARM_STATUS },
-	{ "Module voltage low alarm",
-	  CMIS_VCC_AW_OFFSET, CMIS_VCC_LALARM_STATUS },
-	{ "Module voltage high warning",
-	  CMIS_VCC_AW_OFFSET, CMIS_VCC_HWARN_STATUS },
-	{ "Module voltage low warning",
-	  CMIS_VCC_AW_OFFSET, CMIS_VCC_LWARN_STATUS },
-
-	{ NULL, 0, 0 },
-};
-
-static struct {
-	const char *fmt_str;
-	int offset;
-	int adver_offset;	/* In Page 01h. */
-	__u8 adver_value;	/* Supported if (offset & value) != 0. */
-} cmis_aw_chan_flags[] = {
-	{ "Laser bias current high alarm   (Chan %d)",
-	  CMIS_TX_BIAS_AW_HALARM_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_TX_BIAS_MON_MASK },
-	{ "Laser bias current low alarm    (Chan %d)",
-	  CMIS_TX_BIAS_AW_LALARM_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_TX_BIAS_MON_MASK },
-	{ "Laser bias current high warning (Chan %d)",
-	  CMIS_TX_BIAS_AW_HWARN_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_TX_BIAS_MON_MASK },
-	{ "Laser bias current low warning  (Chan %d)",
-	  CMIS_TX_BIAS_AW_LWARN_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_TX_BIAS_MON_MASK },
-
-	{ "Laser tx power high alarm   (Channel %d)",
-	  CMIS_TX_PWR_AW_HALARM_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_TX_PWR_MON_MASK },
-	{ "Laser tx power low alarm    (Channel %d)",
-	  CMIS_TX_PWR_AW_LALARM_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_TX_PWR_MON_MASK },
-	{ "Laser tx power high warning (Channel %d)",
-	  CMIS_TX_PWR_AW_HWARN_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_TX_PWR_MON_MASK },
-	{ "Laser tx power low warning  (Channel %d)",
-	  CMIS_TX_PWR_AW_LWARN_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_TX_PWR_MON_MASK },
-
-	{ "Laser rx power high alarm   (Channel %d)",
-	  CMIS_RX_PWR_AW_HALARM_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_RX_PWR_MON_MASK },
-	{ "Laser rx power low alarm    (Channel %d)",
-	  CMIS_RX_PWR_AW_LALARM_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_RX_PWR_MON_MASK },
-	{ "Laser rx power high warning (Channel %d)",
-	  CMIS_RX_PWR_AW_HWARN_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_RX_PWR_MON_MASK },
-	{ "Laser rx power low warning  (Channel %d)",
-	  CMIS_RX_PWR_AW_LWARN_OFFSET,
-	  CMIS_DIAG_CHAN_ADVER_OFFSET, CMIS_RX_PWR_MON_MASK },
-
-	{ NULL, 0, 0, 0 },
-};
-
 static void cmis_show_identifier(const struct cmis_memory_map *map)
 {
-	sff8024_show_identifier(map->lower_memory, CMIS_ID_OFFSET);
+	module_show_identifier(map->lower_memory, CMIS_ID_OFFSET);
 }
 
 static void cmis_show_connector(const struct cmis_memory_map *map)
 {
-	sff8024_show_connector(map->page_00h, CMIS_CTOR_OFFSET);
+	module_show_connector(map->page_00h, CMIS_CTOR_OFFSET);
 }
 
 static void cmis_show_oui(const struct cmis_memory_map *map)
 {
-	sff8024_show_oui(map->page_00h, CMIS_VENDOR_OUI_OFFSET);
+	module_show_oui(map->page_00h, CMIS_VENDOR_OUI_OFFSET);
 }
 
 /**
@@ -154,7 +80,7 @@ cmis_show_signals_one(const struct cmis_memory_map *map, const char *name,
 		v |= map->upper_memory[i][0x11][off] << (i * 8);
 
 	if (map->page_01h[ioff] & imask)
-		sff_show_lane_status(name, i * 8, "Yes", "No", v);
+		module_show_lane_status(name, i * 8, "Yes", "No", v);
 }
 
 static void cmis_show_signals(const struct cmis_memory_map *map)
@@ -316,63 +242,11 @@ static void cmis_show_sig_integrity(const struct cmis_memory_map *map)
  */
 static void cmis_show_mit_compliance(const struct cmis_memory_map *map)
 {
-	static const char *cc = " (Copper cable,";
+	u16 value = map->page_00h[CMIS_MEDIA_INTF_TECH_OFFSET];
 
-	printf("\t%-41s : 0x%02x", "Transmitter technology",
-	       map->page_00h[CMIS_MEDIA_INTF_TECH_OFFSET]);
+	module_show_mit_compliance(value);
 
-	switch (map->page_00h[CMIS_MEDIA_INTF_TECH_OFFSET]) {
-	case CMIS_850_VCSEL:
-		printf(" (850 nm VCSEL)\n");
-		break;
-	case CMIS_1310_VCSEL:
-		printf(" (1310 nm VCSEL)\n");
-		break;
-	case CMIS_1550_VCSEL:
-		printf(" (1550 nm VCSEL)\n");
-		break;
-	case CMIS_1310_FP:
-		printf(" (1310 nm FP)\n");
-		break;
-	case CMIS_1310_DFB:
-		printf(" (1310 nm DFB)\n");
-		break;
-	case CMIS_1550_DFB:
-		printf(" (1550 nm DFB)\n");
-		break;
-	case CMIS_1310_EML:
-		printf(" (1310 nm EML)\n");
-		break;
-	case CMIS_1550_EML:
-		printf(" (1550 nm EML)\n");
-		break;
-	case CMIS_OTHERS:
-		printf(" (Others/Undefined)\n");
-		break;
-	case CMIS_1490_DFB:
-		printf(" (1490 nm DFB)\n");
-		break;
-	case CMIS_COPPER_UNEQUAL:
-		printf("%s unequalized)\n", cc);
-		break;
-	case CMIS_COPPER_PASS_EQUAL:
-		printf("%s passive equalized)\n", cc);
-		break;
-	case CMIS_COPPER_NF_EQUAL:
-		printf("%s near and far end limiting active equalizers)\n", cc);
-		break;
-	case CMIS_COPPER_F_EQUAL:
-		printf("%s far end limiting active equalizers)\n", cc);
-		break;
-	case CMIS_COPPER_N_EQUAL:
-		printf("%s near end limiting active equalizers)\n", cc);
-		break;
-	case CMIS_COPPER_LINEAR_EQUAL:
-		printf("%s linear active equalizers)\n", cc);
-		break;
-	}
-
-	if (map->page_00h[CMIS_MEDIA_INTF_TECH_OFFSET] >= CMIS_COPPER_UNEQUAL) {
+	if (value >= CMIS_COPPER_UNEQUAL) {
 		printf("\t%-41s : %udb\n", "Attenuation at 5GHz",
 		       map->page_00h[CMIS_COPPER_ATT_5GHZ]);
 		printf("\t%-41s : %udb\n", "Attenuation at 7GHz",
@@ -403,14 +277,14 @@ static void cmis_show_link_len(const struct cmis_memory_map *map)
 	cmis_print_smf_cbl_len(map);
 	if (!map->page_01h)
 		return;
-	sff_show_value_with_unit(map->page_01h, CMIS_OM5_LEN_OFFSET,
-				 "Length (OM5)", 2, "m");
-	sff_show_value_with_unit(map->page_01h, CMIS_OM4_LEN_OFFSET,
-				 "Length (OM4)", 2, "m");
-	sff_show_value_with_unit(map->page_01h, CMIS_OM3_LEN_OFFSET,
-				 "Length (OM3 50/125um)", 2, "m");
-	sff_show_value_with_unit(map->page_01h, CMIS_OM2_LEN_OFFSET,
-				 "Length (OM2 50/125um)", 1, "m");
+	module_show_value_with_unit(map->page_01h, CMIS_OM5_LEN_OFFSET,
+				    "Length (OM5)", 2, "m");
+	module_show_value_with_unit(map->page_01h, CMIS_OM4_LEN_OFFSET,
+				    "Length (OM4)", 2, "m");
+	module_show_value_with_unit(map->page_01h, CMIS_OM3_LEN_OFFSET,
+				    "Length (OM3 50/125um)", 2, "m");
+	module_show_value_with_unit(map->page_01h, CMIS_OM2_LEN_OFFSET,
+				    "Length (OM2 50/125um)", 1, "m");
 }
 
 /**
@@ -422,22 +296,22 @@ static void cmis_show_vendor_info(const struct cmis_memory_map *map)
 {
 	const char *clei;
 
-	sff_show_ascii(map->page_00h, CMIS_VENDOR_NAME_START_OFFSET,
-		       CMIS_VENDOR_NAME_END_OFFSET, "Vendor name");
+	module_show_ascii(map->page_00h, CMIS_VENDOR_NAME_START_OFFSET,
+			  CMIS_VENDOR_NAME_END_OFFSET, "Vendor name");
 	cmis_show_oui(map);
-	sff_show_ascii(map->page_00h, CMIS_VENDOR_PN_START_OFFSET,
-		       CMIS_VENDOR_PN_END_OFFSET, "Vendor PN");
-	sff_show_ascii(map->page_00h, CMIS_VENDOR_REV_START_OFFSET,
-		       CMIS_VENDOR_REV_END_OFFSET, "Vendor rev");
-	sff_show_ascii(map->page_00h, CMIS_VENDOR_SN_START_OFFSET,
-		       CMIS_VENDOR_SN_END_OFFSET, "Vendor SN");
-	sff_show_ascii(map->page_00h, CMIS_DATE_YEAR_OFFSET,
-		       CMIS_DATE_VENDOR_LOT_OFFSET + 1, "Date code");
+	module_show_ascii(map->page_00h, CMIS_VENDOR_PN_START_OFFSET,
+			  CMIS_VENDOR_PN_END_OFFSET, "Vendor PN");
+	module_show_ascii(map->page_00h, CMIS_VENDOR_REV_START_OFFSET,
+			  CMIS_VENDOR_REV_END_OFFSET, "Vendor rev");
+	module_show_ascii(map->page_00h, CMIS_VENDOR_SN_START_OFFSET,
+			  CMIS_VENDOR_SN_END_OFFSET, "Vendor SN");
+	module_show_ascii(map->page_00h, CMIS_DATE_YEAR_OFFSET,
+			  CMIS_DATE_VENDOR_LOT_OFFSET + 1, "Date code");
 
 	clei = (const char *)(map->page_00h + CMIS_CLEI_START_OFFSET);
 	if (*clei && strncmp(clei, CMIS_CLEI_BLANK, CMIS_CLEI_LEN))
-		sff_show_ascii(map->page_00h, CMIS_CLEI_START_OFFSET,
-			       CMIS_CLEI_END_OFFSET, "CLEI code");
+		module_show_ascii(map->page_00h, CMIS_CLEI_START_OFFSET,
+				  CMIS_CLEI_END_OFFSET, "CLEI code");
 }
 
 /* Print the current Module State. Relevant documents:
@@ -670,15 +544,6 @@ static void cmis_parse_dom(const struct cmis_memory_map *map,
 	cmis_parse_dom_chan_lvl_thresh(map, sd);
 }
 
-/* Print module-level monitoring values. Relevant documents:
- * [1] CMIS Rev. 5, page 110, section 8.2.5, Table 8-9
- */
-static void cmis_show_dom_mod_lvl_monitors(const struct sff_diags *sd)
-{
-	PRINT_TEMP("Module temperature", sd->sfp_temp[MCURR]);
-	PRINT_VCC("Module voltage", sd->sfp_voltage[MCURR]);
-}
-
 /* Print channel Tx laser bias current. Relevant documents:
  * [1] CMIS Rev. 5, page 165, section 8.9.4, Table 8-79
  */
@@ -806,10 +671,11 @@ static void cmis_show_dom_mod_lvl_flags(const struct cmis_memory_map *map)
 {
 	int i;
 
-	for (i = 0; cmis_aw_mod_flags[i].str; i++) {
-		printf("\t%-41s : %s\n", cmis_aw_mod_flags[i].str,
-		       map->lower_memory[cmis_aw_mod_flags[i].offset] &
-		       cmis_aw_mod_flags[i].value ? "On" : "Off");
+	for (i = 0; module_aw_mod_flags[i].str; i++) {
+		if (module_aw_mod_flags[i].type == MODULE_TYPE_CMIS)
+			printf("\t%-41s : %s\n", module_aw_mod_flags[i].str,
+			       map->lower_memory[module_aw_mod_flags[i].offset] &
+			       module_aw_mod_flags[i].value ? "On" : "Off");
 	}
 }
 
@@ -823,16 +689,16 @@ static void cmis_show_dom_chan_lvl_flags_chan(const struct cmis_memory_map *map,
 	const __u8 *page_11h = map->upper_memory[bank][0x11];
 	int i;
 
-	for (i = 0; cmis_aw_chan_flags[i].fmt_str; i++) {
+	for (i = 0; module_aw_chan_flags[i].fmt_str; i++) {
 		char str[80];
 
-		if (!(map->page_01h[cmis_aw_chan_flags[i].adver_offset] &
-		      cmis_aw_chan_flags[i].adver_value))
+		if (!(map->page_01h[module_aw_chan_flags[i].adver_offset] &
+		      module_aw_chan_flags[i].adver_value))
 			continue;
 
-		snprintf(str, 80, cmis_aw_chan_flags[i].fmt_str, chan + 1);
+		snprintf(str, 80, module_aw_chan_flags[i].fmt_str, chan + 1);
 		printf("\t%-41s : %s\n", str,
-		       page_11h[cmis_aw_chan_flags[i].offset] & chan ?
+		       page_11h[module_aw_chan_flags[i].offset] & chan ?
 		       "On" : "Off");
 	}
 }
@@ -876,7 +742,7 @@ static void cmis_show_dom(const struct cmis_memory_map *map)
 
 	cmis_parse_dom(map, &sd);
 
-	cmis_show_dom_mod_lvl_monitors(&sd);
+	module_show_dom_mod_lvl_monitors(&sd);
 	cmis_show_dom_chan_lvl_monitors(map, &sd);
 	cmis_show_dom_mod_lvl_flags(map);
 	cmis_show_dom_chan_lvl_flags(map);

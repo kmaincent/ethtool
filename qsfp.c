@@ -57,7 +57,7 @@
 #include <math.h>
 #include <errno.h>
 #include "internal.h"
-#include "sff-common.h"
+#include "module-common.h"
 #include "qsfp.h"
 #include "cmis.h"
 #include "netlink/extapi.h"
@@ -75,143 +75,9 @@ struct sff8636_memory_map {
 
 #define MAX_DESC_SIZE	42
 
-static struct sff8636_aw_flags {
-	const char *str;        /* Human-readable string, null at the end */
-	int offset;
-	__u8 value;             /* Alarm is on if (offset & value) != 0. */
-} sff8636_aw_flags[] = {
-	{ "Laser bias current high alarm   (Chan 1)",
-		SFF8636_TX_BIAS_12_AW_OFFSET, (SFF8636_TX_BIAS_1_HALARM) },
-	{ "Laser bias current low alarm    (Chan 1)",
-		SFF8636_TX_BIAS_12_AW_OFFSET, (SFF8636_TX_BIAS_1_LALARM) },
-	{ "Laser bias current high warning (Chan 1)",
-		SFF8636_TX_BIAS_12_AW_OFFSET, (SFF8636_TX_BIAS_1_HWARN) },
-	{ "Laser bias current low warning  (Chan 1)",
-		SFF8636_TX_BIAS_12_AW_OFFSET, (SFF8636_TX_BIAS_1_LWARN) },
-
-	{ "Laser bias current high alarm   (Chan 2)",
-		SFF8636_TX_BIAS_12_AW_OFFSET, (SFF8636_TX_BIAS_2_HALARM) },
-	{ "Laser bias current low alarm    (Chan 2)",
-		SFF8636_TX_BIAS_12_AW_OFFSET, (SFF8636_TX_BIAS_2_LALARM) },
-	{ "Laser bias current high warning (Chan 2)",
-		SFF8636_TX_BIAS_12_AW_OFFSET, (SFF8636_TX_BIAS_2_HWARN) },
-	{ "Laser bias current low warning  (Chan 2)",
-		SFF8636_TX_BIAS_12_AW_OFFSET, (SFF8636_TX_BIAS_2_LWARN) },
-
-	{ "Laser bias current high alarm   (Chan 3)",
-		SFF8636_TX_BIAS_34_AW_OFFSET, (SFF8636_TX_BIAS_3_HALARM) },
-	{ "Laser bias current low alarm    (Chan 3)",
-		SFF8636_TX_BIAS_34_AW_OFFSET, (SFF8636_TX_BIAS_3_LALARM) },
-	{ "Laser bias current high warning (Chan 3)",
-		SFF8636_TX_BIAS_34_AW_OFFSET, (SFF8636_TX_BIAS_3_HWARN) },
-	{ "Laser bias current low warning  (Chan 3)",
-		SFF8636_TX_BIAS_34_AW_OFFSET, (SFF8636_TX_BIAS_3_LWARN) },
-
-	{ "Laser bias current high alarm   (Chan 4)",
-		SFF8636_TX_BIAS_34_AW_OFFSET, (SFF8636_TX_BIAS_4_HALARM) },
-	{ "Laser bias current low alarm    (Chan 4)",
-		SFF8636_TX_BIAS_34_AW_OFFSET, (SFF8636_TX_BIAS_4_LALARM) },
-	{ "Laser bias current high warning (Chan 4)",
-		SFF8636_TX_BIAS_34_AW_OFFSET, (SFF8636_TX_BIAS_4_HWARN) },
-	{ "Laser bias current low warning  (Chan 4)",
-		SFF8636_TX_BIAS_34_AW_OFFSET, (SFF8636_TX_BIAS_4_LWARN) },
-
-	{ "Module temperature high alarm",
-		SFF8636_TEMP_AW_OFFSET, (SFF8636_TEMP_HALARM_STATUS) },
-	{ "Module temperature low alarm",
-		SFF8636_TEMP_AW_OFFSET, (SFF8636_TEMP_LALARM_STATUS) },
-	{ "Module temperature high warning",
-		SFF8636_TEMP_AW_OFFSET, (SFF8636_TEMP_HWARN_STATUS) },
-	{ "Module temperature low warning",
-		SFF8636_TEMP_AW_OFFSET, (SFF8636_TEMP_LWARN_STATUS) },
-
-	{ "Module voltage high alarm",
-		SFF8636_VCC_AW_OFFSET, (SFF8636_VCC_HALARM_STATUS) },
-	{ "Module voltage low alarm",
-		SFF8636_VCC_AW_OFFSET, (SFF8636_VCC_LALARM_STATUS) },
-	{ "Module voltage high warning",
-		SFF8636_VCC_AW_OFFSET, (SFF8636_VCC_HWARN_STATUS) },
-	{ "Module voltage low warning",
-		SFF8636_VCC_AW_OFFSET, (SFF8636_VCC_LWARN_STATUS) },
-
-	{ "Laser tx power high alarm   (Channel 1)",
-		SFF8636_TX_PWR_12_AW_OFFSET, (SFF8636_TX_PWR_1_HALARM) },
-	{ "Laser tx power low alarm    (Channel 1)",
-		SFF8636_TX_PWR_12_AW_OFFSET, (SFF8636_TX_PWR_1_LALARM) },
-	{ "Laser tx power high warning (Channel 1)",
-		SFF8636_TX_PWR_12_AW_OFFSET, (SFF8636_TX_PWR_1_HWARN) },
-	{ "Laser tx power low warning  (Channel 1)",
-		SFF8636_TX_PWR_12_AW_OFFSET, (SFF8636_TX_PWR_1_LWARN) },
-
-	{ "Laser tx power high alarm   (Channel 2)",
-		SFF8636_TX_PWR_12_AW_OFFSET, (SFF8636_TX_PWR_2_HALARM) },
-	{ "Laser tx power low alarm    (Channel 2)",
-		SFF8636_TX_PWR_12_AW_OFFSET, (SFF8636_TX_PWR_2_LALARM) },
-	{ "Laser tx power high warning (Channel 2)",
-		SFF8636_TX_PWR_12_AW_OFFSET, (SFF8636_TX_PWR_2_HWARN) },
-	{ "Laser tx power low warning  (Channel 2)",
-		SFF8636_TX_PWR_12_AW_OFFSET, (SFF8636_TX_PWR_2_LWARN) },
-
-	{ "Laser tx power high alarm   (Channel 3)",
-		SFF8636_TX_PWR_34_AW_OFFSET, (SFF8636_TX_PWR_3_HALARM) },
-	{ "Laser tx power low alarm    (Channel 3)",
-		SFF8636_TX_PWR_34_AW_OFFSET, (SFF8636_TX_PWR_3_LALARM) },
-	{ "Laser tx power high warning (Channel 3)",
-		SFF8636_TX_PWR_34_AW_OFFSET, (SFF8636_TX_PWR_3_HWARN) },
-	{ "Laser tx power low warning  (Channel 3)",
-		SFF8636_TX_PWR_34_AW_OFFSET, (SFF8636_TX_PWR_3_LWARN) },
-
-	{ "Laser tx power high alarm   (Channel 4)",
-		SFF8636_TX_PWR_34_AW_OFFSET, (SFF8636_TX_PWR_4_HALARM) },
-	{ "Laser tx power low alarm    (Channel 4)",
-		SFF8636_TX_PWR_34_AW_OFFSET, (SFF8636_TX_PWR_4_LALARM) },
-	{ "Laser tx power high warning (Channel 4)",
-		SFF8636_TX_PWR_34_AW_OFFSET, (SFF8636_TX_PWR_4_HWARN) },
-	{ "Laser tx power low warning  (Channel 4)",
-		SFF8636_TX_PWR_34_AW_OFFSET, (SFF8636_TX_PWR_4_LWARN) },
-
-	{ "Laser rx power high alarm   (Channel 1)",
-		SFF8636_RX_PWR_12_AW_OFFSET, (SFF8636_RX_PWR_1_HALARM) },
-	{ "Laser rx power low alarm    (Channel 1)",
-		SFF8636_RX_PWR_12_AW_OFFSET, (SFF8636_RX_PWR_1_LALARM) },
-	{ "Laser rx power high warning (Channel 1)",
-		SFF8636_RX_PWR_12_AW_OFFSET, (SFF8636_RX_PWR_1_HWARN) },
-	{ "Laser rx power low warning  (Channel 1)",
-		SFF8636_RX_PWR_12_AW_OFFSET, (SFF8636_RX_PWR_1_LWARN) },
-
-	{ "Laser rx power high alarm   (Channel 2)",
-		SFF8636_RX_PWR_12_AW_OFFSET, (SFF8636_RX_PWR_2_HALARM) },
-	{ "Laser rx power low alarm    (Channel 2)",
-		SFF8636_RX_PWR_12_AW_OFFSET, (SFF8636_RX_PWR_2_LALARM) },
-	{ "Laser rx power high warning (Channel 2)",
-		SFF8636_RX_PWR_12_AW_OFFSET, (SFF8636_RX_PWR_2_HWARN) },
-	{ "Laser rx power low warning  (Channel 2)",
-		SFF8636_RX_PWR_12_AW_OFFSET, (SFF8636_RX_PWR_2_LWARN) },
-
-	{ "Laser rx power high alarm   (Channel 3)",
-		SFF8636_RX_PWR_34_AW_OFFSET, (SFF8636_RX_PWR_3_HALARM) },
-	{ "Laser rx power low alarm    (Channel 3)",
-		SFF8636_RX_PWR_34_AW_OFFSET, (SFF8636_RX_PWR_3_LALARM) },
-	{ "Laser rx power high warning (Channel 3)",
-		SFF8636_RX_PWR_34_AW_OFFSET, (SFF8636_RX_PWR_3_HWARN) },
-	{ "Laser rx power low warning  (Channel 3)",
-		SFF8636_RX_PWR_34_AW_OFFSET, (SFF8636_RX_PWR_3_LWARN) },
-
-	{ "Laser rx power high alarm   (Channel 4)",
-		SFF8636_RX_PWR_34_AW_OFFSET, (SFF8636_RX_PWR_4_HALARM) },
-	{ "Laser rx power low alarm    (Channel 4)",
-		SFF8636_RX_PWR_34_AW_OFFSET, (SFF8636_RX_PWR_4_LALARM) },
-	{ "Laser rx power high warning (Channel 4)",
-		SFF8636_RX_PWR_34_AW_OFFSET, (SFF8636_RX_PWR_4_HWARN) },
-	{ "Laser rx power low warning  (Channel 4)",
-		SFF8636_RX_PWR_34_AW_OFFSET, (SFF8636_RX_PWR_4_LWARN) },
-
-	{ NULL, 0, 0 },
-};
-
 static void sff8636_show_identifier(const struct sff8636_memory_map *map)
 {
-	sff8024_show_identifier(map->lower_memory, SFF8636_ID_OFFSET);
+	module_show_identifier(map->lower_memory, SFF8636_ID_OFFSET);
 }
 
 static void sff8636_show_ext_identifier(const struct sff8636_memory_map *map)
@@ -278,7 +144,7 @@ static void sff8636_show_ext_identifier(const struct sff8636_memory_map *map)
 
 static void sff8636_show_connector(const struct sff8636_memory_map *map)
 {
-	sff8024_show_connector(map->page_00h, SFF8636_CTOR_OFFSET);
+	module_show_connector(map->page_00h, SFF8636_CTOR_OFFSET);
 }
 
 static void sff8636_show_transceiver(const struct sff8636_memory_map *map)
@@ -624,64 +490,12 @@ static void sff8636_show_rate_identifier(const struct sff8636_memory_map *map)
 static void
 sff8636_show_wavelength_or_copper_compliance(const struct sff8636_memory_map *map)
 {
-	printf("\t%-41s : 0x%02x", "Transmitter technology",
-	       map->page_00h[SFF8636_DEVICE_TECH_OFFSET] &
-	       SFF8636_TRANS_TECH_MASK);
+	u16 value = map->page_00h[SFF8636_DEVICE_TECH_OFFSET] &
+			SFF8636_TRANS_TECH_MASK;
 
-	switch (map->page_00h[SFF8636_DEVICE_TECH_OFFSET] &
-		SFF8636_TRANS_TECH_MASK) {
-	case SFF8636_TRANS_850_VCSEL:
-		printf(" (850 nm VCSEL)\n");
-		break;
-	case SFF8636_TRANS_1310_VCSEL:
-		printf(" (1310 nm VCSEL)\n");
-		break;
-	case SFF8636_TRANS_1550_VCSEL:
-		printf(" (1550 nm VCSEL)\n");
-		break;
-	case SFF8636_TRANS_1310_FP:
-		printf(" (1310 nm FP)\n");
-		break;
-	case SFF8636_TRANS_1310_DFB:
-		printf(" (1310 nm DFB)\n");
-		break;
-	case SFF8636_TRANS_1550_DFB:
-		printf(" (1550 nm DFB)\n");
-		break;
-	case SFF8636_TRANS_1310_EML:
-		printf(" (1310 nm EML)\n");
-		break;
-	case SFF8636_TRANS_1550_EML:
-		printf(" (1550 nm EML)\n");
-		break;
-	case SFF8636_TRANS_OTHERS:
-		printf(" (Others/Undefined)\n");
-		break;
-	case SFF8636_TRANS_1490_DFB:
-		printf(" (1490 nm DFB)\n");
-		break;
-	case SFF8636_TRANS_COPPER_PAS_UNEQUAL:
-		printf(" (Copper cable unequalized)\n");
-		break;
-	case SFF8636_TRANS_COPPER_PAS_EQUAL:
-		printf(" (Copper cable passive equalized)\n");
-		break;
-	case SFF8636_TRANS_COPPER_LNR_FAR_EQUAL:
-		printf(" (Copper cable, near and far end limiting active equalizers)\n");
-		break;
-	case SFF8636_TRANS_COPPER_FAR_EQUAL:
-		printf(" (Copper cable, far end limiting active equalizers)\n");
-		break;
-	case SFF8636_TRANS_COPPER_NEAR_EQUAL:
-		printf(" (Copper cable, near end limiting active equalizers)\n");
-		break;
-	case SFF8636_TRANS_COPPER_LNR_EQUAL:
-		printf(" (Copper cable, linear active equalizers)\n");
-		break;
-	}
+	module_show_mit_compliance(value);
 
-	if ((map->page_00h[SFF8636_DEVICE_TECH_OFFSET] &
-	     SFF8636_TRANS_TECH_MASK) >= SFF8636_TRANS_COPPER_PAS_UNEQUAL) {
+	if (value >= SFF8636_TRANS_COPPER_PAS_UNEQUAL) {
 		printf("\t%-41s : %udb\n", "Attenuation at 2.5GHz",
 			map->page_00h[SFF8636_WAVELEN_HIGH_BYTE_OFFSET]);
 		printf("\t%-41s : %udb\n", "Attenuation at 5.0GHz",
@@ -823,8 +637,7 @@ static void sff8636_show_dom(const struct sff8636_memory_map *map)
 
 	sff8636_dom_parse(map, &sd);
 
-	PRINT_TEMP("Module temperature", sd.sfp_temp[MCURR]);
-	PRINT_VCC("Module voltage", sd.sfp_voltage[MCURR]);
+	module_show_dom_mod_lvl_monitors(&sd);
 
 	/*
 	 * SFF-8636/8436 spec is not clear whether RX power/ TX bias
@@ -862,10 +675,21 @@ static void sff8636_show_dom(const struct sff8636_memory_map *map)
 	}
 
 	if (sd.supports_alarms) {
-		for (i = 0; sff8636_aw_flags[i].str; ++i) {
-			printf("\t%-41s : %s\n", sff8636_aw_flags[i].str,
-			       map->lower_memory[sff8636_aw_flags[i].offset]
-			       & sff8636_aw_flags[i].value ? "On" : "Off");
+		for (i = 0; module_aw_chan_flags[i].fmt_str; ++i) {
+			if (module_aw_chan_flags[i].type == MODULE_TYPE_SFF8636)
+				printf("\t%-41s : %s\n",
+				       module_aw_chan_flags[i].fmt_str,
+				       (map->lower_memory[module_aw_chan_flags[i].offset]
+				        & module_aw_chan_flags[i].adver_value) ?
+				       "On" : "Off");
+		}
+		for (i = 0; module_aw_mod_flags[i].str; ++i) {
+			if (module_aw_mod_flags[i].type == MODULE_TYPE_SFF8636)
+				printf("\t%-41s : %s\n",
+				       module_aw_mod_flags[i].str,
+				       (map->lower_memory[module_aw_mod_flags[i].offset]
+				       & module_aw_mod_flags[i].value) ?
+				       "On" : "Off");
 		}
 
 		sff_show_thresholds(sd);
@@ -879,26 +703,27 @@ static void sff8636_show_signals(const struct sff8636_memory_map *map)
 	/* There appears to be no Rx LOS support bit, use Tx for both */
 	if (map->page_00h[SFF8636_OPTION_4_OFFSET] & SFF8636_O4_TX_LOS) {
 		v = map->lower_memory[SFF8636_LOS_AW_OFFSET] & 0xf;
-		sff_show_lane_status("Rx loss of signal", 4, "Yes", "No", v);
+		module_show_lane_status("Rx loss of signal", 4, "Yes", "No", v);
 		v = map->lower_memory[SFF8636_LOS_AW_OFFSET] >> 4;
-		sff_show_lane_status("Tx loss of signal", 4, "Yes", "No", v);
+		module_show_lane_status("Tx loss of signal", 4, "Yes", "No", v);
 	}
 
 	v = map->lower_memory[SFF8636_LOL_AW_OFFSET] & 0xf;
 	if (map->page_00h[SFF8636_OPTION_3_OFFSET] & SFF8636_O3_RX_LOL)
-		sff_show_lane_status("Rx loss of lock", 4, "Yes", "No", v);
+		module_show_lane_status("Rx loss of lock", 4, "Yes", "No", v);
 
 	v = map->lower_memory[SFF8636_LOL_AW_OFFSET] >> 4;
 	if (map->page_00h[SFF8636_OPTION_3_OFFSET] & SFF8636_O3_TX_LOL)
-		sff_show_lane_status("Tx loss of lock", 4, "Yes", "No", v);
+		module_show_lane_status("Tx loss of lock", 4, "Yes", "No", v);
 
 	v = map->lower_memory[SFF8636_FAULT_AW_OFFSET] & 0xf;
 	if (map->page_00h[SFF8636_OPTION_4_OFFSET] & SFF8636_O4_TX_FAULT)
-		sff_show_lane_status("Tx fault", 4, "Yes", "No", v);
+		module_show_lane_status("Tx fault", 4, "Yes", "No", v);
 
 	v = map->lower_memory[SFF8636_FAULT_AW_OFFSET] >> 4;
 	if (map->page_00h[SFF8636_OPTION_2_OFFSET] & SFF8636_O2_TX_EQ_AUTO)
-		sff_show_lane_status("Tx adaptive eq fault", 4, "Yes", "No", v);
+		module_show_lane_status("Tx adaptive eq fault", 4, "Yes", "No",
+					v);
 }
 
 static void sff8636_show_page_zero(const struct sff8636_memory_map *map)
@@ -907,31 +732,31 @@ static void sff8636_show_page_zero(const struct sff8636_memory_map *map)
 	sff8636_show_connector(map);
 	sff8636_show_transceiver(map);
 	sff8636_show_encoding(map);
-	sff_show_value_with_unit(map->page_00h, SFF8636_BR_NOMINAL_OFFSET,
-				 "BR, Nominal", 100, "Mbps");
+	module_show_value_with_unit(map->page_00h, SFF8636_BR_NOMINAL_OFFSET,
+				    "BR, Nominal", 100, "Mbps");
 	sff8636_show_rate_identifier(map);
-	sff_show_value_with_unit(map->page_00h, SFF8636_SM_LEN_OFFSET,
-				 "Length (SMF,km)", 1, "km");
-	sff_show_value_with_unit(map->page_00h, SFF8636_OM3_LEN_OFFSET,
-				 "Length (OM3 50um)", 2, "m");
-	sff_show_value_with_unit(map->page_00h, SFF8636_OM2_LEN_OFFSET,
-				 "Length (OM2 50um)", 1, "m");
-	sff_show_value_with_unit(map->page_00h, SFF8636_OM1_LEN_OFFSET,
-				 "Length (OM1 62.5um)", 1, "m");
-	sff_show_value_with_unit(map->page_00h, SFF8636_CBL_LEN_OFFSET,
-				 "Length (Copper or Active cable)", 1, "m");
+	module_show_value_with_unit(map->page_00h, SFF8636_SM_LEN_OFFSET,
+				    "Length (SMF,km)", 1, "km");
+	module_show_value_with_unit(map->page_00h, SFF8636_OM3_LEN_OFFSET,
+				    "Length (OM3 50um)", 2, "m");
+	module_show_value_with_unit(map->page_00h, SFF8636_OM2_LEN_OFFSET,
+				    "Length (OM2 50um)", 1, "m");
+	module_show_value_with_unit(map->page_00h, SFF8636_OM1_LEN_OFFSET,
+				    "Length (OM1 62.5um)", 1, "m");
+	module_show_value_with_unit(map->page_00h, SFF8636_CBL_LEN_OFFSET,
+				    "Length (Copper or Active cable)", 1, "m");
 	sff8636_show_wavelength_or_copper_compliance(map);
-	sff_show_ascii(map->page_00h, SFF8636_VENDOR_NAME_START_OFFSET,
-		       SFF8636_VENDOR_NAME_END_OFFSET, "Vendor name");
-	sff8024_show_oui(map->page_00h, SFF8636_VENDOR_OUI_OFFSET);
-	sff_show_ascii(map->page_00h, SFF8636_VENDOR_PN_START_OFFSET,
-		       SFF8636_VENDOR_PN_END_OFFSET, "Vendor PN");
-	sff_show_ascii(map->page_00h, SFF8636_VENDOR_REV_START_OFFSET,
-		       SFF8636_VENDOR_REV_END_OFFSET, "Vendor rev");
-	sff_show_ascii(map->page_00h, SFF8636_VENDOR_SN_START_OFFSET,
-		       SFF8636_VENDOR_SN_END_OFFSET, "Vendor SN");
-	sff_show_ascii(map->page_00h, SFF8636_DATE_YEAR_OFFSET,
-		       SFF8636_DATE_VENDOR_LOT_OFFSET + 1, "Date code");
+	module_show_ascii(map->page_00h, SFF8636_VENDOR_NAME_START_OFFSET,
+			  SFF8636_VENDOR_NAME_END_OFFSET, "Vendor name");
+	module_show_oui(map->page_00h, SFF8636_VENDOR_OUI_OFFSET);
+	module_show_ascii(map->page_00h, SFF8636_VENDOR_PN_START_OFFSET,
+			  SFF8636_VENDOR_PN_END_OFFSET, "Vendor PN");
+	module_show_ascii(map->page_00h, SFF8636_VENDOR_REV_START_OFFSET,
+			  SFF8636_VENDOR_REV_END_OFFSET, "Vendor rev");
+	module_show_ascii(map->page_00h, SFF8636_VENDOR_SN_START_OFFSET,
+			  SFF8636_VENDOR_SN_END_OFFSET, "Vendor SN");
+	module_show_ascii(map->page_00h, SFF8636_DATE_YEAR_OFFSET,
+			  SFF8636_DATE_VENDOR_LOT_OFFSET + 1, "Date code");
 	sff_show_revision_compliance(map->lower_memory,
 				     SFF8636_REV_COMPLIANCE_OFFSET);
 	sff8636_show_signals(map);
@@ -941,9 +766,9 @@ static void sff8636_show_all_common(const struct sff8636_memory_map *map)
 {
 	sff8636_show_identifier(map);
 	switch (map->lower_memory[SFF8636_ID_OFFSET]) {
-	case SFF8024_ID_QSFP:
-	case SFF8024_ID_QSFP_PLUS:
-	case SFF8024_ID_QSFP28:
+	case MODULE_ID_QSFP:
+	case MODULE_ID_QSFP_PLUS:
+	case MODULE_ID_QSFP28:
 		sff8636_show_page_zero(map);
 		sff8636_show_dom(map);
 		break;
@@ -978,12 +803,12 @@ void sff8636_show_all_ioctl(const __u8 *id, __u32 eeprom_len)
 	struct sff8636_memory_map map = {};
 
 	switch (id[SFF8636_ID_OFFSET]) {
-	case SFF8024_ID_QSFP_DD:
-	case SFF8024_ID_OSFP:
-	case SFF8024_ID_DSFP:
-	case SFF8024_ID_QSFP_PLUS_CMIS:
-	case SFF8024_ID_SFP_DD_CMIS:
-	case SFF8024_ID_SFP_PLUS_CMIS:
+	case MODULE_ID_QSFP_DD:
+	case MODULE_ID_OSFP:
+	case MODULE_ID_DSFP:
+	case MODULE_ID_QSFP_PLUS_CMIS:
+	case MODULE_ID_SFP_DD_CMIS:
+	case MODULE_ID_SFP_PLUS_CMIS:
 		cmis_show_all_ioctl(id);
 		break;
 	default:

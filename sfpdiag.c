@@ -12,7 +12,7 @@
 #include <math.h>
 #include <arpa/inet.h>
 #include "internal.h"
-#include "sff-common.h"
+#include "module-common.h"
 
 /* Offsets in decimal, for direct comparison with the SFF specs */
 
@@ -263,8 +263,7 @@ void sff8472_show_all(const __u8 *id)
 
 	PRINT_xX_PWR(rx_power_string, sd.rx_power[MCURR]);
 
-	PRINT_TEMP("Module temperature", sd.sfp_temp[MCURR]);
-	PRINT_VCC("Module voltage", sd.sfp_voltage[MCURR]);
+	module_show_dom_mod_lvl_monitors(&sd);
 
 	printf("\t%-41s : %s\n", "Alarm/warning flags implemented",
 	       (sd.supports_alarms ? "Yes" : "No"));

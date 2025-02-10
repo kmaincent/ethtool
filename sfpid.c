@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include "internal.h"
-#include "sff-common.h"
+#include "module-common.h"
 #include "netlink/extapi.h"
 
 #define SFF8079_PAGE_SIZE		0x80
@@ -19,7 +19,7 @@
 
 static void sff8079_show_identifier(const __u8 *id)
 {
-	sff8024_show_identifier(id, 0);
+	module_show_identifier(id, 0);
 }
 
 static void sff8079_show_ext_identifier(const __u8 *id)
@@ -37,7 +37,7 @@ static void sff8079_show_ext_identifier(const __u8 *id)
 
 static void sff8079_show_connector(const __u8 *id)
 {
-	sff8024_show_connector(id, 2);
+	module_show_connector(id, 2);
 }
 
 static void sff8079_show_transceiver(const __u8 *id)
@@ -299,12 +299,6 @@ static void sff8079_show_rate_identifier(const __u8 *id)
 	}
 }
 
-static void sff8079_show_oui(const __u8 *id)
-{
-	printf("\t%-41s : %02x:%02x:%02x\n", "Vendor OUI",
-	       id[37], id[38], id[39]);
-}
-
 static void sff8079_show_wavelength_or_copper_compliance(const __u8 *id)
 {
 	if (id[8] & (1 << 2)) {
@@ -342,30 +336,6 @@ static void sff8079_show_wavelength_or_copper_compliance(const __u8 *id)
 		printf("\t%-41s : %unm\n", "Laser wavelength",
 		       (id[60] << 8) | id[61]);
 	}
-}
-
-static void sff8079_show_value_with_unit(const __u8 *id, unsigned int reg,
-					 const char *name, unsigned int mult,
-					 const char *unit)
-{
-	unsigned int val = id[reg];
-
-	printf("\t%-41s : %u%s\n", name, val * mult, unit);
-}
-
-static void sff8079_show_ascii(const __u8 *id, unsigned int first_reg,
-			       unsigned int last_reg, const char *name)
-{
-	unsigned int reg, val;
-
-	printf("\t%-41s : ", name);
-	while (first_reg <= last_reg && id[last_reg] == ' ')
-		last_reg--;
-	for (reg = first_reg; reg <= last_reg; reg++) {
-		val = id[reg];
-		putchar(((val >= 32) && (val <= 126)) ? val : '_');
-	}
-	printf("\n");
 }
 
 static void sff8079_show_options(const __u8 *id)
@@ -425,24 +395,22 @@ static void sff8079_show_all_common(const __u8 *id)
 		sff8079_show_encoding(id);
 		printf("\t%-41s : %u%s\n", "BR, Nominal", br_nom, "MBd");
 		sff8079_show_rate_identifier(id);
-		sff8079_show_value_with_unit(id, 14,
-					     "Length (SMF,km)", 1, "km");
-		sff8079_show_value_with_unit(id, 15, "Length (SMF)", 100, "m");
-		sff8079_show_value_with_unit(id, 16, "Length (50um)", 10, "m");
-		sff8079_show_value_with_unit(id, 17,
-					     "Length (62.5um)", 10, "m");
-		sff8079_show_value_with_unit(id, 18, "Length (Copper)", 1, "m");
-		sff8079_show_value_with_unit(id, 19, "Length (OM3)", 10, "m");
+		module_show_value_with_unit(id, 14, "Length (SMF,km)", 1, "km");
+		module_show_value_with_unit(id, 15, "Length (SMF)", 100, "m");
+		module_show_value_with_unit(id, 16, "Length (50um)", 10, "m");
+		module_show_value_with_unit(id, 17, "Length (62.5um)", 10, "m");
+		module_show_value_with_unit(id, 18, "Length (Copper)", 1, "m");
+		module_show_value_with_unit(id, 19, "Length (OM3)", 10, "m");
 		sff8079_show_wavelength_or_copper_compliance(id);
-		sff8079_show_ascii(id, 20, 35, "Vendor name");
-		sff8079_show_oui(id);
-		sff8079_show_ascii(id, 40, 55, "Vendor PN");
-		sff8079_show_ascii(id, 56, 59, "Vendor rev");
+		module_show_ascii(id, 20, 35, "Vendor name");
+		module_show_oui(id, 37);
+		module_show_ascii(id, 40, 55, "Vendor PN");
+		module_show_ascii(id, 56, 59, "Vendor rev");
 		sff8079_show_options(id);
 		printf("\t%-41s : %u%s\n", "BR margin, max", br_max, "%");
 		printf("\t%-41s : %u%s\n", "BR margin, min", br_min, "%");
-		sff8079_show_ascii(id, 68, 83, "Vendor SN");
-		sff8079_show_ascii(id, 84, 91, "Date code");
+		module_show_ascii(id, 68, 83, "Vendor SN");
+		module_show_ascii(id, 84, 91, "Date code");
 	}
 }
 
