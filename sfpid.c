@@ -517,7 +517,11 @@ int sff8079_show_all_nl(struct cmd_context *ctx)
 	if (ret)
 		goto out;
 
+	new_json_obj(ctx->json);
+	open_json_object(NULL);
 	sff8079_show_all_common(buf);
+	close_json_object();
+	delete_json_obj();
 
 	/* Finish if A2h page is not present */
 	if (!(buf[92] & (1 << 6)))
