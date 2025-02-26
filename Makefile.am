@@ -3,7 +3,11 @@ AM_CPPFLAGS = -I$(top_srcdir)/uapi
 LDADD = -lm
 
 man_MANS = ethtool.8
-EXTRA_DIST = LICENSE ethtool.8 ethtool.spec.in aclocal.m4 ChangeLog autogen.sh
+EXTRA_DIST = LICENSE ethtool.8 ethtool.spec.in aclocal.m4 ChangeLog autogen.sh \
+             org.kernel.software.network.ethtool.metainfo.xml
+
+dist_metainfo_DATA = org.kernel.software.network.ethtool.metainfo.xml
+metainfodir = $(datarootdir)/metainfo
 
 sbin_PROGRAMS = ethtool
 ethtool_SOURCES = ethtool.c uapi/linux/const.h uapi/linux/ethtool.h internal.h \
