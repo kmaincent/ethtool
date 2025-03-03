@@ -58,6 +58,8 @@ void dump_json_rss_info(struct cmd_context *ctx, u32 *indir_table,
 	open_json_object("rss-input-transformation");
 	print_bool(PRINT_JSON, "symmetric-xor", NULL,
 		   (input_xfrm & RXH_XFRM_SYM_XOR) ? true : false);
+	if (input_xfrm & ~RXH_XFRM_SYM_XOR)
+		print_uint(PRINT_JSON, "raw", NULL, input_xfrm);
 
 	close_json_object();
 
@@ -174,6 +176,10 @@ int rss_reply_cb(const struct nlmsghdr *nlhdr, void *data)
 		printf("RSS input transformation:\n");
 		printf("    symmetric-xor: %s\n",
 		       (input_xfrm & RXH_XFRM_SYM_XOR) ? "on" : "off");
+		input_xfrm &= ~RXH_XFRM_SYM_XOR;
+
+		if (input_xfrm)
+			printf("    Unknown bits in RSS input transformation: 0x%x\n", input_xfrm);
 	}
 
 	return MNL_CB_OK;

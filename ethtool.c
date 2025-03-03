@@ -4118,6 +4118,11 @@ static int do_grxfh(struct cmd_context *ctx)
 	printf("RSS input transformation:\n");
 	printf("    symmetric-xor: %s\n",
 	       (rss->input_xfrm & RXH_XFRM_SYM_XOR) ? "on" : "off");
+	rss->input_xfrm &= ~RXH_XFRM_SYM_XOR;
+
+	if (rss->input_xfrm)
+		printf("    Unknown bits in RSS input transformation: 0x%x\n",
+		       rss->input_xfrm);
 
 out:
 	free(hfuncs);
