@@ -4236,7 +4236,7 @@ static int do_srxfh(struct cmd_context *ctx)
 	u32 arg_num = 0, indir_bytes = 0;
 	u32 req_hfunc = 0;
 	u32 entry_size = sizeof(rss_head.rss_config[0]);
-	u32 req_input_xfrm = 0xff;
+	u32 req_input_xfrm = RXH_XFRM_NO_CHANGE;
 	u32 num_weights = 0;
 	u32 rss_context = 0;
 	int delete = 0;
