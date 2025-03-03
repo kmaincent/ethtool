@@ -4106,10 +4106,14 @@ static int do_grxfh(struct cmd_context *ctx)
 		return 1;
 	}
 
-	for (i = 0; i < hfuncs->len; i++)
+	for (i = 0; i < hfuncs->len; i++) {
 		printf("    %s: %s\n",
 		       (const char *)hfuncs->data + i * ETH_GSTRING_LEN,
 		       (rss->hfunc & (1 << i)) ? "on" : "off");
+		rss->hfunc &= ~(1 << i);
+	}
+	if (rss->hfunc)
+		printf("    Unknown hash function: 0x%x\n", rss->hfunc);
 
 	printf("RSS input transformation:\n");
 	printf("    symmetric-xor: %s\n",

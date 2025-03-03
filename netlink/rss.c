@@ -56,6 +56,9 @@ void dump_json_rss_info(struct cmd_context *ctx, u32 *indir_table,
 				break;
 			}
 		}
+
+		if (i == get_count(hash_funcs))
+			print_uint(PRINT_JSON, "rss-hash-function-raw", NULL, hfunc);
 	}
 
 	close_json_object();
@@ -163,7 +166,11 @@ int rss_reply_cb(const struct nlmsghdr *nlhdr, void *data)
 		for (unsigned int i = 0; i < get_count(hash_funcs); i++) {
 			printf("    %s: %s\n", get_string(hash_funcs, i),
 			       (rss_hfunc & (1 << i)) ? "on" : "off");
+			rss_hfunc &= ~(1 << i);
 		}
+		if (rss_hfunc)
+			printf("    Unknown hash function: 0x%x\n", rss_hfunc);
+
 		printf("RSS input transformation:\n");
 		printf("    symmetric-xor: %s\n",
 		       (input_xfrm & RXH_XFRM_SYM_XOR) ? "on" : "off");
