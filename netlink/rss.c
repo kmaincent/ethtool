@@ -47,12 +47,6 @@ void dump_json_rss_info(struct cmd_context *ctx, u32 *indir_table,
 			if (hfunc & (1 << i)) {
 				print_string(PRINT_JSON, "rss-hash-function",
 					     NULL, get_string(hash_funcs, i));
-				open_json_object("rss-input-transformation");
-				print_bool(PRINT_JSON, "symmetric-xor", NULL,
-					   (input_xfrm & RXH_XFRM_SYM_XOR) ?
-					   true : false);
-
-				close_json_object();
 				break;
 			}
 		}
@@ -60,6 +54,12 @@ void dump_json_rss_info(struct cmd_context *ctx, u32 *indir_table,
 		if (i == get_count(hash_funcs))
 			print_uint(PRINT_JSON, "rss-hash-function-raw", NULL, hfunc);
 	}
+
+	open_json_object("rss-input-transformation");
+	print_bool(PRINT_JSON, "symmetric-xor", NULL,
+		   (input_xfrm & RXH_XFRM_SYM_XOR) ? true : false);
+
+	close_json_object();
 
 	close_json_object();
 }
