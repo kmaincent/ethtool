@@ -5987,7 +5987,8 @@ static const struct option args[] = {
 		.opts	= "-T|--show-time-stamping",
 		.func	= do_tsinfo,
 		.nlfunc	= nl_tsinfo,
-		.help	= "Show time stamping capabilities"
+		.help	= "Show time stamping capabilities",
+		.xhelp	= "		[ index N qualifier precise|approx ]\n"
 	},
 	{
 		.opts	= "-x|--show-rxfh-indir|--show-rxfh",
