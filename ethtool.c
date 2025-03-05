@@ -5991,6 +5991,17 @@ static const struct option args[] = {
 		.xhelp	= "		[ index N qualifier precise|approx ]\n"
 	},
 	{
+		.opts	= "--get-hwtimestamp-cfg",
+		.nlfunc	= nl_gtsconfig,
+		.help	= "Get selected hardware time stamping"
+	},
+	{
+		.opts	= "--set-hwtimestamp-cfg",
+		.nlfunc	= nl_stsconfig,
+		.help	= "Select hardware time stamping",
+		.xhelp	= "		[ index N qualifier precise|approx ]\n"
+	},
+	{
 		.opts	= "-x|--show-rxfh-indir|--show-rxfh",
 		.json	= true,
 		.func	= do_grxfh,

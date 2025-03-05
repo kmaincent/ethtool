@@ -14,10 +14,11 @@
 #include "netlink.h"
 #include "bitset.h"
 #include "parser.h"
+#include "ts.h"
 
 /* TSINFO_GET */
 
-static const char *tsinfo_hwprov_qualifier_names(u32 val)
+const char *tsinfo_hwprov_qualifier_names(u32 val)
 {
 	switch (val) {
 	case HWTSTAMP_PROVIDER_QUALIFIER_PRECISE:
@@ -29,7 +30,7 @@ static const char *tsinfo_hwprov_qualifier_names(u32 val)
 	}
 }
 
-static int tsinfo_show_hwprov(const struct nlattr *nest)
+int tsinfo_show_hwprov(const struct nlattr *nest)
 {
 	const struct nlattr *tb[ETHTOOL_A_TS_HWTSTAMP_PROVIDER_MAX + 1] = {};
 	DECLARE_ATTR_TB_INFO(tb);
@@ -117,9 +118,9 @@ static void tsinfo_dump_cb(unsigned int idx, const char *name, bool val,
 		printf("\tbit%u\n", idx);
 }
 
-static int tsinfo_dump_list(struct nl_context *nlctx, const struct nlattr *attr,
-			    const char *label, const char *if_empty,
-			    unsigned int stringset_id)
+int tsinfo_dump_list(struct nl_context *nlctx, const struct nlattr *attr,
+		     const char *label, const char *if_empty,
+		     unsigned int stringset_id)
 {
 	const struct stringset *strings = NULL;
 	int ret;
@@ -205,11 +206,11 @@ int tsinfo_reply_cb(const struct nlmsghdr *nlhdr, void *data)
 	return MNL_CB_OK;
 }
 
-static int tsinfo_qualifier_parser(struct nl_context *nlctx,
-				   uint16_t type __maybe_unused,
-				   const void *data __maybe_unused,
-				   struct nl_msg_buff *msgbuff __maybe_unused,
-				   void *dest __maybe_unused)
+int tsinfo_qualifier_parser(struct nl_context *nlctx,
+			    uint16_t type __maybe_unused,
+			    const void *data __maybe_unused,
+			    struct nl_msg_buff *msgbuff __maybe_unused,
+			    void *dest __maybe_unused)
 {
 	const char *arg = *nlctx->argp;
 	u32 val;
