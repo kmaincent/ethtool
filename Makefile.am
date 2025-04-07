@@ -56,6 +56,7 @@ ethtool_SOURCES += \
 		  netlink/phy.c \
 		  netlink/tsconfig.c \
 		  uapi/linux/ethtool_netlink.h \
+		  uapi/linux/ethtool_netlink_generated.h \
 		  uapi/linux/netlink.h uapi/linux/genetlink.h \
 		  uapi/linux/rtnetlink.h uapi/linux/if_link.h \
 		  uapi/linux/if.h uapi/linux/hdlc/ioctl.h
