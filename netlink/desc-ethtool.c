@@ -97,6 +97,8 @@ static const struct pretty_nla_desc __rings_desc[] = {
 	NLATTR_DESC_BOOL(ETHTOOL_A_RINGS_RX_PUSH),
 	NLATTR_DESC_U32(ETHTOOL_A_RINGS_TX_PUSH_BUF_LEN),
 	NLATTR_DESC_U32(ETHTOOL_A_RINGS_TX_PUSH_BUF_LEN_MAX),
+	NLATTR_DESC_U32(ETHTOOL_A_RINGS_HDS_THRESH),
+	NLATTR_DESC_U32(ETHTOOL_A_RINGS_HDS_THRESH_MAX),
 };
 
 static const struct pretty_nla_desc __mm_stat_desc[] = {
@@ -165,6 +167,7 @@ static const struct pretty_nla_desc __linkstate_desc[] = {
 	NLATTR_DESC_U32(ETHTOOL_A_LINKSTATE_SQI_MAX),
 	NLATTR_DESC_U8(ETHTOOL_A_LINKSTATE_EXT_STATE),
 	NLATTR_DESC_U8(ETHTOOL_A_LINKSTATE_EXT_SUBSTATE),
+	NLATTR_DESC_U32(ETHTOOL_A_LINKSTATE_EXT_DOWN_CNT),
 };
 
 static const struct pretty_nla_desc __debug_desc[] = {
@@ -202,6 +205,18 @@ static const struct pretty_nla_desc __channels_desc[] = {
 	NLATTR_DESC_U32(ETHTOOL_A_CHANNELS_COMBINED_COUNT),
 };
 
+static const struct pretty_nla_desc __irq_moderation_desc[] = {
+	NLATTR_DESC_INVALID(ETHTOOL_A_IRQ_MODERATION_UNSPEC),
+	NLATTR_DESC_U32(ETHTOOL_A_IRQ_MODERATION_USEC),
+	NLATTR_DESC_U32(ETHTOOL_A_IRQ_MODERATION_PKTS),
+	NLATTR_DESC_U32(ETHTOOL_A_IRQ_MODERATION_COMPS),
+};
+
+static const struct pretty_nla_desc __profile_desc[] = {
+	NLATTR_DESC_INVALID(ETHTOOL_A_PROFILE_UNSPEC),
+	NLATTR_DESC_NESTED(ETHTOOL_A_PROFILE_IRQ_MODERATION, irq_moderation),
+};
+
 static const struct pretty_nla_desc __coalesce_desc[] = {
 	NLATTR_DESC_INVALID(ETHTOOL_A_COALESCE_UNSPEC),
 	NLATTR_DESC_NESTED(ETHTOOL_A_COALESCE_HEADER, header),
@@ -232,6 +247,8 @@ static const struct pretty_nla_desc __coalesce_desc[] = {
 	NLATTR_DESC_U32(ETHTOOL_A_COALESCE_TX_AGGR_MAX_BYTES),
 	NLATTR_DESC_U32(ETHTOOL_A_COALESCE_TX_AGGR_MAX_FRAMES),
 	NLATTR_DESC_U32(ETHTOOL_A_COALESCE_TX_AGGR_TIME_USECS),
+	NLATTR_DESC_NESTED(ETHTOOL_A_COALESCE_RX_PROFILE, profile),
+	NLATTR_DESC_NESTED(ETHTOOL_A_COALESCE_TX_PROFILE, profile),
 };
 
 static const struct pretty_nla_desc __pause_stats_desc[] = {
@@ -247,6 +264,7 @@ static const struct pretty_nla_desc __pause_desc[] = {
 	NLATTR_DESC_BOOL(ETHTOOL_A_PAUSE_RX),
 	NLATTR_DESC_BOOL(ETHTOOL_A_PAUSE_TX),
 	NLATTR_DESC_NESTED(ETHTOOL_A_PAUSE_STATS, pause_stats),
+	NLATTR_DESC_U32(ETHTOOL_A_PAUSE_STATS_SRC),
 };
 
 static const struct pretty_nla_desc __eee_desc[] = {
@@ -260,6 +278,19 @@ static const struct pretty_nla_desc __eee_desc[] = {
 	NLATTR_DESC_U32(ETHTOOL_A_EEE_TX_LPI_TIMER),
 };
 
+static const struct pretty_nla_desc __ts_stat_desc[] = {
+	NLATTR_DESC_INVALID(ETHTOOL_A_TS_STAT_UNSPEC),
+	NLATTR_DESC_UINT(ETHTOOL_A_TS_STAT_TX_PKTS),
+	NLATTR_DESC_UINT(ETHTOOL_A_TS_STAT_TX_LOST),
+	NLATTR_DESC_UINT(ETHTOOL_A_TS_STAT_TX_ERR),
+	NLATTR_DESC_UINT(ETHTOOL_A_TS_STAT_TX_ONESTEP_PKTS_UNCONFIRMED),
+};
+
+static const struct pretty_nla_desc __ts_hwtstamp_provider_desc[] = {
+	NLATTR_DESC_INVALID(ETHTOOL_A_TS_HWTSTAMP_PROVIDER_UNSPEC),
+	NLATTR_DESC_U32(ETHTOOL_A_TS_HWTSTAMP_PROVIDER_INDEX),
+	NLATTR_DESC_U32(ETHTOOL_A_TS_HWTSTAMP_PROVIDER_QUALIFIER),
+};
 
 static const struct pretty_nla_desc __tsinfo_desc[] = {
 	NLATTR_DESC_INVALID(ETHTOOL_A_TSINFO_UNSPEC),
@@ -268,6 +299,8 @@ static const struct pretty_nla_desc __tsinfo_desc[] = {
 	NLATTR_DESC_NESTED(ETHTOOL_A_TSINFO_TX_TYPES, bitset),
 	NLATTR_DESC_NESTED(ETHTOOL_A_TSINFO_RX_FILTERS, bitset),
 	NLATTR_DESC_U32(ETHTOOL_A_TSINFO_PHC_INDEX),
+	NLATTR_DESC_NESTED(ETHTOOL_A_TSINFO_STATS, ts_stat),
+	NLATTR_DESC_NESTED(ETHTOOL_A_TSINFO_HWTSTAMP_PROVIDER, ts_hwtstamp_provider),
 };
 
 static const struct pretty_nla_desc __cable_test_result_desc[] = {
@@ -429,6 +462,9 @@ static const struct pretty_nla_desc __stats_grp_desc[] = {
 	NLATTR_DESC_NESTED(ETHTOOL_A_STATS_GRP_STAT, stats_grp_stat),
 	NLATTR_DESC_NESTED(ETHTOOL_A_STATS_GRP_HIST_RX, stats_grp_hist),
 	NLATTR_DESC_NESTED(ETHTOOL_A_STATS_GRP_HIST_TX, stats_grp_hist),
+	NLATTR_DESC_U32(ETHTOOL_A_STATS_GRP_HIST_BKT_LOW),
+	NLATTR_DESC_U32(ETHTOOL_A_STATS_GRP_HIST_BKT_HI),
+	NLATTR_DESC_U64(ETHTOOL_A_STATS_GRP_HIST_VAL),
 };
 
 static const struct pretty_nla_desc __stats_desc[] = {
@@ -437,6 +473,7 @@ static const struct pretty_nla_desc __stats_desc[] = {
 	NLATTR_DESC_NESTED(ETHTOOL_A_STATS_HEADER, header),
 	NLATTR_DESC_NESTED(ETHTOOL_A_STATS_GROUPS, bitset),
 	NLATTR_DESC_NESTED(ETHTOOL_A_STATS_GRP, stats_grp),
+	NLATTR_DESC_U32(ETHTOOL_A_STATS_SRC),
 };
 
 static const struct pretty_nla_desc __phc_vclocks_desc[] = {
@@ -469,12 +506,27 @@ static const char *__pse_pw_d_status_names[] = {
 	[ETHTOOL_PODL_PSE_PW_D_STATUS_ERROR]		= "ETHTOOL_PODL_PSE_PW_D_STATUS_ERROR",
 };
 
+static const struct pretty_nla_desc __c33_pse_pw_limit_desc[] = {
+	NLATTR_DESC_INVALID(ETHTOOL_A_C33_PSE_PW_LIMIT_UNSPEC),
+	NLATTR_DESC_U32(ETHTOOL_A_C33_PSE_PW_LIMIT_MIN),
+	NLATTR_DESC_U32(ETHTOOL_A_C33_PSE_PW_LIMIT_MAX),
+};
+
 static const struct pretty_nla_desc __pse_desc[] = {
 	NLATTR_DESC_INVALID(ETHTOOL_A_PSE_UNSPEC),
 	NLATTR_DESC_NESTED(ETHTOOL_A_PSE_HEADER, header),
 	NLATTR_DESC_U32_ENUM(ETHTOOL_A_PODL_PSE_ADMIN_STATE, pse_admin_state),
 	NLATTR_DESC_U32_ENUM(ETHTOOL_A_PODL_PSE_ADMIN_CONTROL, pse_admin_state),
 	NLATTR_DESC_U32_ENUM(ETHTOOL_A_PODL_PSE_PW_D_STATUS, pse_pw_d_status),
+	NLATTR_DESC_U32(ETHTOOL_A_C33_PSE_ADMIN_STATE),
+	NLATTR_DESC_U32(ETHTOOL_A_C33_PSE_ADMIN_CONTROL),
+	NLATTR_DESC_U32(ETHTOOL_A_C33_PSE_PW_D_STATUS),
+	NLATTR_DESC_U32(ETHTOOL_A_C33_PSE_PW_CLASS),
+	NLATTR_DESC_U32(ETHTOOL_A_C33_PSE_ACTUAL_PW),
+	NLATTR_DESC_U32(ETHTOOL_A_C33_PSE_EXT_STATE),
+	NLATTR_DESC_U32(ETHTOOL_A_C33_PSE_EXT_SUBSTATE),
+	NLATTR_DESC_U32(ETHTOOL_A_C33_PSE_AVAIL_PW_LIMIT),
+	NLATTR_DESC_NESTED(ETHTOOL_A_C33_PSE_PW_LIMIT_RANGES, c33_pse_pw_limit),
 };
 
 static const struct pretty_nla_desc __rss_desc[] = {
@@ -484,6 +536,8 @@ static const struct pretty_nla_desc __rss_desc[] = {
 	NLATTR_DESC_U32(ETHTOOL_A_RSS_HFUNC),
 	NLATTR_DESC_BINARY(ETHTOOL_A_RSS_INDIR),
 	NLATTR_DESC_BINARY(ETHTOOL_A_RSS_HKEY),
+	NLATTR_DESC_U32(ETHTOOL_A_RSS_INPUT_XFRM),
+	NLATTR_DESC_U32(ETHTOOL_A_RSS_START_CONTEXT),
 };
 
 static const struct pretty_nla_desc __plca_desc[] = {
@@ -508,6 +562,27 @@ static const struct pretty_nla_desc __module_fw_flash_desc[] = {
 	NLATTR_DESC_STRING(ETHTOOL_A_MODULE_FW_FLASH_STATUS_MSG),
 	NLATTR_DESC_UINT(ETHTOOL_A_MODULE_FW_FLASH_DONE),
 	NLATTR_DESC_UINT(ETHTOOL_A_MODULE_FW_FLASH_TOTAL),
+};
+
+static const struct pretty_nla_desc __phy_desc[] = {
+	NLATTR_DESC_INVALID(ETHTOOL_A_PHY_UNSPEC),
+	NLATTR_DESC_NESTED(ETHTOOL_A_PHY_HEADER, header),
+	NLATTR_DESC_U32(ETHTOOL_A_PHY_INDEX),
+	NLATTR_DESC_STRING(ETHTOOL_A_PHY_DRVNAME),
+	NLATTR_DESC_STRING(ETHTOOL_A_PHY_NAME),
+	NLATTR_DESC_U32(ETHTOOL_A_PHY_UPSTREAM_TYPE),
+	NLATTR_DESC_U32(ETHTOOL_A_PHY_UPSTREAM_INDEX),
+	NLATTR_DESC_STRING(ETHTOOL_A_PHY_UPSTREAM_SFP_NAME),
+	NLATTR_DESC_STRING(ETHTOOL_A_PHY_DOWNSTREAM_SFP_NAME),
+};
+
+static const struct pretty_nla_desc __tsconfig_desc[] = {
+	NLATTR_DESC_INVALID(ETHTOOL_A_TSCONFIG_UNSPEC),
+	NLATTR_DESC_NESTED(ETHTOOL_A_TSCONFIG_HEADER, header),
+	NLATTR_DESC_NESTED(ETHTOOL_A_TSCONFIG_HWTSTAMP_PROVIDER, ts_hwtstamp_provider),
+	NLATTR_DESC_NESTED(ETHTOOL_A_TSCONFIG_TX_TYPES, bitset),
+	NLATTR_DESC_NESTED(ETHTOOL_A_TSCONFIG_RX_FILTERS, bitset),
+	NLATTR_DESC_NESTED(ETHTOOL_A_TSCONFIG_HWTSTAMP_FLAGS, bitset),
 };
 
 const struct pretty_nlmsg_desc ethnl_umsg_desc[] = {
@@ -556,6 +631,9 @@ const struct pretty_nlmsg_desc ethnl_umsg_desc[] = {
 	NLMSG_DESC(ETHTOOL_MSG_MM_GET, mm),
 	NLMSG_DESC(ETHTOOL_MSG_MM_SET, mm),
 	NLMSG_DESC(ETHTOOL_MSG_MODULE_FW_FLASH_ACT, module_fw_flash),
+	NLMSG_DESC(ETHTOOL_MSG_PHY_GET, phy),
+	NLMSG_DESC(ETHTOOL_MSG_TSCONFIG_GET, tsconfig),
+	NLMSG_DESC(ETHTOOL_MSG_TSCONFIG_SET, tsconfig),
 };
 
 const unsigned int ethnl_umsg_n_desc = ARRAY_SIZE(ethnl_umsg_desc);
@@ -606,6 +684,10 @@ const struct pretty_nlmsg_desc ethnl_kmsg_desc[] = {
 	NLMSG_DESC(ETHTOOL_MSG_MM_GET_REPLY, mm),
 	NLMSG_DESC(ETHTOOL_MSG_MM_NTF, mm),
 	NLMSG_DESC(ETHTOOL_MSG_MODULE_FW_FLASH_NTF, module_fw_flash),
+	NLMSG_DESC(ETHTOOL_MSG_PHY_GET_REPLY, phy),
+	NLMSG_DESC(ETHTOOL_MSG_PHY_NTF, phy),
+	NLMSG_DESC(ETHTOOL_MSG_TSCONFIG_GET_REPLY, tsconfig),
+	NLMSG_DESC(ETHTOOL_MSG_TSCONFIG_SET_REPLY, tsconfig),
 };
 
 const unsigned int ethnl_kmsg_n_desc = ARRAY_SIZE(ethnl_kmsg_desc);
