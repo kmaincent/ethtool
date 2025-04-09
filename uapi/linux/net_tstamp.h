@@ -13,6 +13,12 @@
 #include <linux/types.h>
 #include <linux/socket.h>   /* for SO_TIMESTAMPING */
 
+enum hwtstamp_source {
+	HWTSTAMP_SOURCE_UNSPEC,
+	HWTSTAMP_SOURCE_NETDEV,
+	HWTSTAMP_SOURCE_PHYLIB,
+};
+
 /*
  * Possible type of hwtstamp provider. Mainly "precise" the default one
  * is for IEEE 1588 quality and "approx" is for NICs DMA point.
